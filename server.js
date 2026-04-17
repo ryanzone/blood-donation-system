@@ -9,7 +9,7 @@ app.use(cors());
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "kunju123",
+  // password: "",
   database: "blood_donation_db"
 });
 
