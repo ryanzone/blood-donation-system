@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blood Bank Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script type="importmap">
+    {
+      "imports": {
+        "@material/web/": "https://esm.run/@material/web/"
+      }
+    }
+  </script>
+  <script type="module" src="https://esm.run/@material/web/all.js"></script>
+</head>
+
+<body class="dark-theme">
+
+  <div class="background-blobs">
+    <div class="blob red"></div>
+    <div class="blob purple"></div>
+    <div class="blob blue"></div>
+  </div>
+
+  <header>
+    <div class="header-inner">
+      <div class="header-title">
+        <div class="chip"><span class="drop"></span> BDMS System</div>
+        <h1>Blood Bank <span>Dashboard</span></h1>
+      </div>
+      <md-icon-button id="theme-toggle">
+        <md-icon id="theme-icon">light_mode</md-icon>
+      </md-icon-button>
+    </div>
+  </header>
+
+  <div class="nav-container">
+    <md-tabs aria-label="Dashboard Navigation" class="glass-tabs">
+      <md-primary-tab id="tab-donors" active>Donors</md-primary-tab>
+      <md-primary-tab id="tab-inventory">Inventory</md-primary-tab>
+      <md-primary-tab id="tab-camps">Camps</md-primary-tab>
+    </md-tabs>
+  </div>
+
+  <main>
+    <section id="section-donors" class="tab-section active">
+      <div class="card-container" id="donors-container"></div>
+    </section>
+
+    <section id="section-inventory" class="tab-section">
+      <div class="card-container" id="inv-container"></div>
+    </section>
+
+    <section id="section-camps" class="tab-section">
+      <div class="card-container" id="camps-container"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

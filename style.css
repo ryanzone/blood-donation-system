@@ -1,0 +1,246 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --font-heading: 'Syne', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  
+  /* Dark Theme Variables (Default for this expressive look) */
+  --bg: #0a0a0f;
+  --surface-glass: rgba(255, 255, 255, 0.03);
+  --surface-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --accent-gradient: linear-gradient(135deg, #ff6b7a, #ffb4ab);
+}
+
+body.light-theme {
+  --bg: #f8fafc;
+  /* Frosted white glass for light mode readability */
+  --surface-glass: rgba(255, 255, 255, 0.75); 
+  /* Brighter border for crisp edges */
+  --surface-border: rgba(255, 255, 255, 0.6); 
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --accent-gradient: linear-gradient(135deg, #e84057, #b3261e);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.5s ease;
+}
+
+/* =========================================
+   LIQUID GLASS BACKGROUND BLOBS
+   ========================================= */
+.background-blobs {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: -1;
+  overflow: hidden;
+  filter: blur(100px); /* The magic blur */
+  opacity: 0.6;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  animation: float 15s infinite alternate ease-in-out;
+}
+
+.blob.red {
+  width: 50vw; height: 50vw;
+  background: rgba(232, 64, 87, 0.4);
+  top: -10%; left: -10%;
+}
+
+.blob.purple {
+  width: 40vw; height: 40vw;
+  background: rgba(139, 92, 246, 0.3);
+  bottom: -10%; right: -5%;
+  animation-delay: -5s;
+}
+
+.blob.blue {
+  width: 35vw; height: 35vw;
+  background: rgba(56, 189, 248, 0.2);
+  top: 40%; left: 30%;
+  animation-delay: -10s;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(10%, 15%) scale(1.1); }
+}
+
+/* =========================================
+   EXPRESSIVE HEADER
+   ========================================= */
+header {
+  position: sticky;
+  top: 16px; /* Floats the header slightly below the top of the viewport */
+  z-index: 100;
+  padding: 0 24px;
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 32px;
+  
+  /* Glassmorphism settings */
+  background: var(--surface-glass);
+  backdrop-filter: blur(24px); 
+  -webkit-backdrop-filter: blur(24px);
+  
+  /* M3 Expressive Styling - Matched to tiles */
+  border: 1px solid var(--surface-border);
+  border-radius: 28px; /* Matched to .data-card */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); 
+  transition: all 0.3s ease;
+}
+
+.header-title h1 {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.header-title h1 span {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.chip {
+  background: var(--accent-gradient);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+/* =========================================
+   GLASS TABS & MAIN CONTENT
+   ========================================= */
+.nav-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 32px auto 24px auto; 
+  padding: 6px 8px; 
+  width: max-content; 
+  max-width: 90vw;
+  
+  /* Glassmorphism & M3 Expressive style */
+  background: var(--surface-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--surface-border);
+  border-radius: 36px; 
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+md-tabs {
+  /* Force internal M3 surfaces to be transparent */
+  --md-sys-color-surface: transparent;
+  --md-sys-color-surface-container: transparent;
+  
+  /* Remove the default Material bottom divider line */
+  --md-divider-thickness: 0px;
+  
+  background: transparent !important;
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+md-primary-tab {
+  background: transparent !important;
+  border-radius: 22px; 
+  margin: 0 4px;
+  min-width: 120px; 
+  
+  /* Exact M3 Tokens to fix the dark text */
+  --md-primary-tab-label-text-color: var(--text-secondary);
+  --md-primary-tab-hover-label-text-color: var(--text-primary);
+  --md-primary-tab-active-label-text-color: var(--text-primary);
+  --md-primary-tab-focus-label-text-color: var(--text-primary);
+  --md-primary-tab-pressed-label-text-color: var(--text-primary);
+  
+  /* Typography */
+  --md-primary-tab-label-text-font: var(--font-body);
+  --md-primary-tab-label-text-size: 15px;
+  --md-primary-tab-label-text-weight: 600;
+  
+  /* Active Indicator styling */
+  --md-primary-tab-active-indicator-color: var(--text-primary); 
+  --md-primary-tab-active-indicator-height: 3px;
+  --md-primary-tab-active-indicator-shape: 4px 4px 0 0;
+  
+  /* Force container backgrounds to be transparent to kill the white boxes */
+  --md-primary-tab-container-color: transparent !important;
+}
+
+main {
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 24px 60px;
+}
+
+.tab-section { display: none; animation: fadeUp 0.5s ease forwards; }
+.tab-section.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* =========================================
+   GLASSMORPHISM CARDS
+   ========================================= */
+.card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.data-card {
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px); /* Frosted Glass */
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--surface-border);
+  border-radius: 28px; /* M3 Expressive large radii */
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.data-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 180, 171, 0.3); /* Subtle glow on hover */
+}
+
+.data-title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 22px;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.data-subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
