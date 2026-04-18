@@ -1,5 +1,5 @@
 -- Create Database
-CREATE DATABASE blood_donation;
+CREATE DATABASE blood_donation_db;
 USE blood_donation;
 
 -- Table: INVENTORY
