@@ -13,7 +13,7 @@ const db = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "", // Ensure your friend adds their MySQL root password here if they have one!
-  database: "blood_donation" // CRITICAL: Fixed to match the name in schmea.sql
+  database: "blood_donation" // Matches the name in schmea.sql
 });
 
 db.connect(err => {
@@ -78,12 +78,41 @@ app.post("/inventory", (req, res) => {
   });
 });
 
+// UPDATED: Now uses a Transaction to update Inventory Stock automatically
 app.post("/donationcamp", (req, res) => {
   const { donor_id, donation_date, units_given } = req.body;
-  const sql = "INSERT INTO donationcamp (donor_id, donation_date, units_given) VALUES (?, ?, ?)";
-  db.query(sql, [donor_id, donation_date, units_given], (err, result) => {
+
+  db.beginTransaction((err) => {
     if (err) return res.status(500).send(err);
-    res.json({ message: "Camp record successfully added!" });
+
+    // 1. Insert the camp record
+    const sqlInsert = "INSERT INTO donationcamp (donor_id, donation_date, units_given) VALUES (?, ?, ?)";
+    db.query(sqlInsert, [donor_id, donation_date, units_given], (err, result) => {
+      if (err) {
+        return db.rollback(() => res.status(500).send(err));
+      }
+
+      // 2. Update the inventory stock for that donor's blood type
+      const sqlUpdate = `
+        UPDATE inventory i
+        JOIN donors d ON i.blood_id = d.blood_id
+        SET i.total_units = i.total_units + ?
+        WHERE d.donor_id = ?
+      `;
+
+      db.query(sqlUpdate, [units_given, donor_id], (err, updateResult) => {
+        if (err) {
+          return db.rollback(() => res.status(500).send(err));
+        }
+
+        db.commit((err) => {
+          if (err) {
+            return db.rollback(() => res.status(500).send(err));
+          }
+          res.json({ message: "Camp record added and Inventory updated!" });
+        });
+      });
+    });
   });
 });
 

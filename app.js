@@ -37,13 +37,11 @@ const sections = [
 
 tabBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-        // Update Active Button
         tabBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         
         currentTabIndex = parseInt(btn.getAttribute('data-index') || btn.getAttribute('data-target'));
         
-        // Update Active Section
         sections.forEach((section, idx) => {
             if (idx === currentTabIndex) {
                 section.classList.add('active');
@@ -52,15 +50,12 @@ tabBtns.forEach((btn) => {
             }
         });
 
-        // Reset Search & Filter on tab switch
         document.getElementById('global-search').value = "";
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         activeFilter = "";
         
-        // Ensure the search section ALWAYS stays visible across all tabs
         document.querySelector('.search-section').style.display = '';
 
-        // FIXED: Proper logical checks to load data or apply filters
         if (currentTabIndex === 0) {
             allDonors.length === 0 ? loadDonors() : applyFilters();
         } else if (currentTabIndex === 1) {
@@ -73,24 +68,25 @@ tabBtns.forEach((btn) => {
 
 // --- 3. SEARCH & TOGGLE FILTERS ---
 const searchInput = document.getElementById('global-search');
-searchInput.addEventListener('input', applyFilters);
+if(searchInput) searchInput.addEventListener('input', applyFilters);
 
 const filterToggleBtn = document.getElementById('filter-toggle');
 const filterDropdown = document.getElementById('filter-dropdown');
 
-filterToggleBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    filterDropdown.classList.toggle('active');
-    filterToggleBtn.classList.toggle('active');
-});
+if (filterToggleBtn && filterDropdown) {
+    filterToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        filterDropdown.classList.toggle('active');
+        filterToggleBtn.classList.toggle('active');
+    });
 
-// Close dropdown when clicking outside
-document.addEventListener('click', (e) => {
-    if (!filterToggleBtn.contains(e.target) && !filterDropdown.contains(e.target)) {
-        filterDropdown.classList.remove('active');
-        filterToggleBtn.classList.remove('active');
-    }
-});
+    document.addEventListener('click', (e) => {
+        if (!filterToggleBtn.contains(e.target) && !filterDropdown.contains(e.target)) {
+            filterDropdown.classList.remove('active');
+            filterToggleBtn.classList.remove('active');
+        }
+    });
+}
 
 const filterBtns = document.querySelectorAll('.filter-btn');
 filterBtns.forEach(btn => {
@@ -112,7 +108,7 @@ function applyFilters() {
     
     if (currentTabIndex === 0) {
         const filtered = allDonors.filter(d => 
-            (d.name && d.name.toLowerCase().includes(term) || (d.blood_group && d.blood_group.toLowerCase().includes(term))) &&
+            ((d.name && d.name.toLowerCase().includes(term)) || (d.blood_group && d.blood_group.toLowerCase().includes(term))) &&
             (activeFilter === "" || d.blood_group === activeFilter)
         );
         renderDonors(filtered);
@@ -140,7 +136,6 @@ const toastContainer = document.getElementById('toast-container');
 
 fabAdd.addEventListener('click', () => {
     addModal.classList.add('active');
-    // FIXED: Properly handle timezone offsets so the date is always correct
     const today = new Date();
     document.getElementById('camp-date').value = today.toISOString().split('T')[0];
 });
@@ -169,6 +164,25 @@ typeBtns.forEach(btn => {
     });
 });
 
+// =========================================================
+// AUTO-FILL BLOOD ID LOGIC (MATCHES SCHEMA)
+// =========================================================
+const bloodGroupMap = {
+    'O+': 100, 'O-': 101, 'A+': 102, 'A-': 103,
+    'B+': 104, 'B-': 105, 'AB+': 106, 'AB-': 107
+};
+
+// Listen to Donor Dropdown and auto-fill Donor Blood ID
+document.getElementById('donor-bg').addEventListener('change', (e) => {
+    document.getElementById('donor-blood-id').value = bloodGroupMap[e.target.value];
+});
+
+// Listen to Inventory Dropdown and auto-fill Inventory Blood ID
+document.getElementById('inv-bg').addEventListener('change', (e) => {
+    document.getElementById('inv-blood-id').value = bloodGroupMap[e.target.value];
+});
+
+// Submit Form exactly matching your MySQL parameters
 addForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     let endpoint = "";
@@ -179,11 +193,13 @@ addForm.addEventListener('submit', async (e) => {
         payload = {
             name: document.getElementById('donor-name').value,
             phone: document.getElementById('donor-phone').value,
-            blood_id: parseInt(document.getElementById('donor-blood-id').value)
+            // Grabs the ID directly from the auto-filled input box exactly like the schema wants
+            blood_id: parseInt(document.getElementById('donor-blood-id').value) 
         };
     } else if (currentRecordType === 'inventory') {
         endpoint = "/inventory";
         payload = {
+            // Grabs the ID directly from the auto-filled input box
             blood_id: parseInt(document.getElementById('inv-blood-id').value),
             blood_group: document.getElementById('inv-bg').value,
             total_units: parseInt(document.getElementById('inv-units').value)
@@ -208,7 +224,6 @@ addForm.addEventListener('submit', async (e) => {
             showToast("Database Record successfully saved!");
             addModal.classList.remove('active');
             addForm.reset();
-            // Refresh to show newly added item
             if (currentTabIndex === 0) loadDonors();
             if (currentTabIndex === 1) loadInventory();
             if (currentTabIndex === 2) loadCamps();
