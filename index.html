@@ -8,15 +8,6 @@
   
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <script type="importmap">
-    {
-      "imports": {
-        "@material/web/": "https://esm.run/@material/web/"
-      }
-    }
-  </script>
-  <script type="module" src="https://esm.run/@material/web/all.js"></script>
 </head>
 
 <body class="dark-theme">
@@ -33,18 +24,47 @@
         <div class="chip"><span class="drop"></span> BDMS System</div>
         <h1>Blood Bank <span>Dashboard</span></h1>
       </div>
-      <md-icon-button id="theme-toggle">
-        <md-icon id="theme-icon">light_mode</md-icon>
-      </md-icon-button>
+      <button id="theme-toggle" class="icon-btn">
+        <span class="material-symbols-outlined" id="theme-icon">light_mode</span>
+      </button>
     </div>
   </header>
 
+  <div class="search-section">
+    <div class="search-row">
+      <div class="search-container">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" id="global-search" class="search-input" placeholder="Search donors, blood groups, or camps...">
+      </div>
+      <button class="icon-btn filter-toggle-btn" id="filter-toggle" title="Filter Blood Groups">
+        <span class="material-symbols-outlined">filter_list</span>
+      </button>
+    </div>
+    
+    <div class="filter-dropdown" id="filter-dropdown">
+      <button class="filter-btn" data-filter="A+">A+</button>
+      <button class="filter-btn" data-filter="A-">A-</button>
+      <button class="filter-btn" data-filter="B+">B+</button>
+      <button class="filter-btn" data-filter="B-">B-</button>
+      <button class="filter-btn" data-filter="AB+">AB+</button>
+      <button class="filter-btn" data-filter="AB-">AB-</button>
+      <button class="filter-btn" data-filter="O+">O+</button>
+      <button class="filter-btn" data-filter="O-">O-</button>
+    </div>
+  </div>
+
   <div class="nav-container">
-    <md-tabs aria-label="Dashboard Navigation" class="glass-tabs">
-      <md-primary-tab id="tab-donors" active>Donors</md-primary-tab>
-      <md-primary-tab id="tab-inventory">Inventory</md-primary-tab>
-      <md-primary-tab id="tab-camps">Camps</md-primary-tab>
-    </md-tabs>
+    <div class="glass-tabs">
+      <button class="tab-btn active" data-index="0">
+        <span class="material-symbols-outlined">person</span> Donors
+      </button>
+      <button class="tab-btn" data-index="1">
+        <span class="material-symbols-outlined">bloodtype</span> Inventory
+      </button>
+      <button class="tab-btn" data-index="2">
+        <span class="material-symbols-outlined">campaign</span> Camp
+      </button>
+    </div>
   </div>
 
   <main>
@@ -53,7 +73,7 @@
     </section>
 
     <section id="section-inventory" class="tab-section">
-      <div class="card-container" id="inv-container"></div>
+      <div class="card-container" id="inventory-container"></div>
     </section>
 
     <section id="section-camps" class="tab-section">
@@ -61,6 +81,54 @@
     </section>
   </main>
 
+  <button class="fab" id="fab-add">
+    <span class="material-symbols-outlined">add</span>
+  </button>
+
+  <div class="modal-overlay" id="add-modal">
+    <div class="glass-modal">
+      <div class="modal-header">
+        <h2 class="data-title" style="margin: 0;">Add Record</h2>
+        <button class="icon-btn" id="close-modal" type="button" style="background: transparent; border: none; font-size: 24px; cursor: pointer; color: var(--text-primary);"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      
+      <div class="record-type-selector">
+        <button class="type-btn active" data-type="donor">Donors Table</button>
+        <button class="type-btn" data-type="inventory">Inventory Table</button>
+        <button class="type-btn" data-type="camp">Camp Table</button>
+      </div>
+
+      <form id="add-form">
+        <div id="form-donor" class="form-section active">
+          <input type="text" id="donor-name" class="form-input" placeholder="Donor Name (VARCHAR)" required>
+          <input type="tel" id="donor-phone" class="form-input" placeholder="Phone Number (VARCHAR)" maxlength="15" required>
+          <input type="number" id="donor-blood-id" class="form-input" placeholder="Blood ID (INT - Foreign Key)" required>
+        </div>
+
+        <div id="form-inventory" class="form-section">
+          <input type="number" id="inv-blood-id" class="form-input" placeholder="Blood ID (INT - Primary Key)">
+          <select id="inv-bg" class="form-input">
+            <option value="" disabled selected>Select Blood Group (VARCHAR)</option>
+            <option value="A+">A+</option><option value="A-">A-</option>
+            <option value="B+">B+</option><option value="B-">B-</option>
+            <option value="AB+">AB+</option><option value="AB-">AB-</option>
+            <option value="O+">O+</option><option value="O-">O-</option>
+          </select>
+          <input type="number" id="inv-units" class="form-input" placeholder="Total Units (INT)" min="0">
+        </div>
+
+        <div id="form-camp" class="form-section">
+          <input type="number" id="camp-donor-id" class="form-input" placeholder="Donor ID (INT - Foreign Key)">
+          <input type="date" id="camp-date" class="form-input" style="color-scheme: dark;">
+          <input type="number" id="camp-units" class="form-input" placeholder="Units Given (INT)" min="1">
+        </div>
+
+        <button type="submit" class="submit-btn">Save to Database</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
   <script src="app.js"></script>
 </body>
 </html>
