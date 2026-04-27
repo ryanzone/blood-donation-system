@@ -6,14 +6,14 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // CRITICAL: Allows the server to read data sent from the frontend
+app.use(express.json());
 
 // DB CONNECTION
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "kunju123", 
-  database: "blood_donation_db" // Matches the name in schmea.sql
+  database: "blood_donation_db"
 });
 
 db.connect(err => {
@@ -22,7 +22,7 @@ db.connect(err => {
 });
 
 // ==========================================
-// GET ROUTES (Loads data into frontend)
+// GET ROUTES
 // ==========================================
 
 app.get("/donors", (req, res) => {
@@ -57,19 +57,43 @@ app.get("/camps", (req, res) => {
 });
 
 // ==========================================
-// POST ROUTES (Saves new data from frontend)
+// POST ROUTES
 // ==========================================
 
+// DETECTIVE DONOR ROUTE
 app.post("/donors", (req, res) => {
-  const { name, phone, blood_id } = req.body;
+  console.log("📥 Incoming Donor Data:", req.body); 
+
+  const { name, phone, blood_group, blood_id } = req.body;
+
+  const bloodMap = {
+    'O+': 100, 'O-': 101, 'A+': 102, 'A-': 103,
+    'B+': 104, 'B-': 105, 'AB+': 106, 'AB-': 107
+  };
+
+  let finalBloodId = blood_id; 
+  if (!finalBloodId && blood_group) {
+      finalBloodId = bloodMap[blood_group];
+  }
+
+  if (!finalBloodId) {
+      console.error("❌ Add Donor Error: Could not determine blood_id from the data sent.");
+      return res.status(400).send("Invalid blood group.");
+  }
+
   const sql = "INSERT INTO donors (name, phone, blood_id) VALUES (?, ?, ?)";
-  db.query(sql, [name, phone, blood_id], (err, result) => {
-    if (err) return res.status(500).send(err);
+  
+  db.query(sql, [name, phone, finalBloodId], (err, result) => {
+    if (err) {
+      console.error("❌ Database Insert Error:", err.message); 
+      return res.status(500).send(err);
+    }
+    console.log(`✅ Donor ${name} added successfully! (Blood ID: ${finalBloodId})`);
     res.json({ message: "Donor successfully added!" });
   });
 });
 
-// FIXED: Now uses ON DUPLICATE KEY UPDATE so it adds to existing stock instead of crashing
+// INVENTORY UPSERT ROUTE
 app.post("/inventory", (req, res) => {
   const { blood_id, blood_group, total_units } = req.body;
   const sql = `
@@ -83,38 +107,51 @@ app.post("/inventory", (req, res) => {
   });
 });
 
-// UPDATED: Now uses a Transaction to update Inventory Stock automatically
+// BULLETPROOF CAMP ROUTE
 app.post("/donationcamp", (req, res) => {
   const { donor_id, donation_date, units_given } = req.body;
 
   db.beginTransaction((err) => {
     if (err) return res.status(500).send(err);
 
-    // 1. Insert the camp record
     const sqlInsert = "INSERT INTO donationcamp (donor_id, donation_date, units_given) VALUES (?, ?, ?)";
     db.query(sqlInsert, [donor_id, donation_date, units_given], (err, result) => {
       if (err) {
+        console.error("Camp Insert Error:", err.message);
         return db.rollback(() => res.status(500).send(err));
       }
 
-      // 2. Update the inventory stock for that donor's blood type
-      const sqlUpdate = `
-        UPDATE inventory i
-        JOIN donors d ON i.blood_id = d.blood_id
-        SET i.total_units = i.total_units + ?
-        WHERE d.donor_id = ?
-      `;
-
-      db.query(sqlUpdate, [units_given, donor_id], (err, updateResult) => {
-        if (err) {
-          return db.rollback(() => res.status(500).send(err));
+      db.query("SELECT blood_id FROM donors WHERE donor_id = ?", [donor_id], (err, donorRows) => {
+        if (err || donorRows.length === 0) {
+          console.error("❌ Donor ID not found in database!");
+          return db.rollback(() => res.status(400).send("Donor not found"));
         }
 
-        db.commit((err) => {
+        const b_id = donorRows[0].blood_id;
+
+        const reverseMap = { 
+            100: 'O+', 101: 'O-', 102: 'A+', 103: 'A-', 
+            104: 'B+', 105: 'B-', 106: 'AB+', 107: 'AB-' 
+        };
+        const b_group = reverseMap[b_id];
+
+        const sqlUpdate = "UPDATE inventory SET total_units = total_units + ? WHERE blood_group = ? OR blood_id = ?";
+        
+        db.query(sqlUpdate, [units_given, b_group, b_id], (err, updateResult) => {
           if (err) {
+            console.error("Inventory Update Error:", err.message);
             return db.rollback(() => res.status(500).send(err));
           }
-          res.json({ message: "Camp record added and Inventory updated!" });
+
+          if (updateResult.affectedRows === 0) {
+            console.error(`❌ SILENT FAIL: No inventory row matched ${b_group} or ${b_id}!`);
+            return db.rollback(() => res.status(400).send("No matching inventory row found."));
+          }
+
+          db.commit((err) => {
+            if (err) return db.rollback(() => res.status(500).send(err));
+            res.json({ message: "Camp record added and Inventory updated!" });
+          });
         });
       });
     });

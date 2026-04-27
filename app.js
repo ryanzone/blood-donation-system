@@ -138,6 +138,10 @@ fabAdd.addEventListener('click', () => {
     addModal.classList.add('active');
     const today = new Date();
     document.getElementById('camp-date').value = today.toISOString().split('T')[0];
+    
+    // FIX: Force the modal to "click" the donor tab in the background to clear hidden required fields!
+    const donorBtn = document.querySelector('.type-btn[data-type="donor"]');
+    if(donorBtn) donorBtn.click();
 });
 
 closeModal.addEventListener('click', () => addModal.classList.remove('active'));
@@ -193,13 +197,11 @@ addForm.addEventListener('submit', async (e) => {
         payload = {
             name: document.getElementById('donor-name').value,
             phone: document.getElementById('donor-phone').value,
-            // Grabs the ID directly from the auto-filled input box exactly like the schema wants
             blood_id: parseInt(document.getElementById('donor-blood-id').value) 
         };
     } else if (currentRecordType === 'inventory') {
         endpoint = "/inventory";
         payload = {
-            // Grabs the ID directly from the auto-filled input box
             blood_id: parseInt(document.getElementById('inv-blood-id').value),
             blood_group: document.getElementById('inv-bg').value,
             total_units: parseInt(document.getElementById('inv-units').value)
@@ -224,6 +226,12 @@ addForm.addEventListener('submit', async (e) => {
             showToast("Database Record successfully saved!");
             addModal.classList.remove('active');
             addForm.reset();
+            
+            // FIX: Clear frontend memory so new records immediately show up on tabs
+            allDonors = [];
+            allInventory = [];
+            allCamps = [];
+
             if (currentTabIndex === 0) loadDonors();
             if (currentTabIndex === 1) loadInventory();
             if (currentTabIndex === 2) loadCamps();
