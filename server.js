@@ -12,8 +12,8 @@ app.use(express.json()); // CRITICAL: Allows the server to read data sent from t
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "", // Ensure your friend adds their MySQL root password here if they have one!
-  database: "blood_donation" // Matches the name in schmea.sql
+  password: "kunju123", 
+  database: "blood_donation_db" // Matches the name in schmea.sql
 });
 
 db.connect(err => {
@@ -69,12 +69,17 @@ app.post("/donors", (req, res) => {
   });
 });
 
+// FIXED: Now uses ON DUPLICATE KEY UPDATE so it adds to existing stock instead of crashing
 app.post("/inventory", (req, res) => {
   const { blood_id, blood_group, total_units } = req.body;
-  const sql = "INSERT INTO inventory (blood_id, blood_group, total_units) VALUES (?, ?, ?)";
+  const sql = `
+    INSERT INTO inventory (blood_id, blood_group, total_units) 
+    VALUES (?, ?, ?) 
+    ON DUPLICATE KEY UPDATE total_units = total_units + VALUES(total_units)
+  `;
   db.query(sql, [blood_id, blood_group, total_units], (err, result) => {
     if (err) return res.status(500).send(err);
-    res.json({ message: "Inventory successfully added!" });
+    res.json({ message: "Inventory successfully updated!" });
   });
 });
 
